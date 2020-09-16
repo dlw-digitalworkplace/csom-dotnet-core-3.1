@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <UserSecretsId>8775f845-264f-4f9a-b921-50d9bb1f9003</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.14.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="3.1.8" />
+    <PackageReference Include="Microsoft.Azure.Services.AppAuthentication" Version="1.5.0" />
+    <PackageReference Include="Microsoft.SharePointOnline.CSOM" Version="16.1.20412.12000" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Demo.CsomDotnetCore.Core\Demo.CsomDotnetCore.Core.csproj" />
+  </ItemGroup>
+
+
+</Project>
