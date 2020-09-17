@@ -175,3 +175,7 @@ Just follow the steps from [Rick's blog](https://www.rickvanrousselt.com/stop-us
 # UserCredential
 
 This access token provider is also provided in the sample. You can easily use this implementation of IAccessTokenProvider instead of the AzureDefaultCredential implementation. You only need to add some app settings such as UserName & Password.
+
+Caveats
+- Do not forget to enable 'Treat application as a public client' in the AAD app (to be able to get access token when using username & password)
+- Do not forget to add sufficient ~delegated~ SharePoint permissions to the AAD app
