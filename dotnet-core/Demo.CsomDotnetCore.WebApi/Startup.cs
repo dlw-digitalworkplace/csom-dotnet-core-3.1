@@ -28,7 +28,7 @@ namespace Demo.CsomDotnetCore.WebApi
             // Services
             services.AddMemoryCache();
             services.AddScoped<ISharePointService, SharePointService>();
-            services.AddScoped<IAccessTokenProvider, DefaultAzureCredentialAccessTokenProvider>(); // can be interchanged with UserCredentialAccessTokenProvider, which requires app settings: UserUpn, UserPassword, TenantUrl, ClientId
+            services.AddScoped<IAccessTokenProvider, DefaultAzureCredentialAccessTokenProvider>(); // can be interchanged with UserCredentialAccessTokenProvider, which requires app settings: UserUpn, UserPassword
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -38,6 +38,7 @@ namespace Demo.CsomDotnetCore.WebApi
             {
                 app.UseDeveloperExceptionPage();
 
+                // Required for EnvironmentCredential (local dev)
                 var clientId = Configuration.GetValue<string>(Globals.AppSettings.ClientId);
                 var tenantId = Configuration.GetValue<string>(Globals.AppSettings.TenantId);
                 var devCertPath = Configuration.GetValue<string>(Globals.AppSettings.DevCertificatePath);

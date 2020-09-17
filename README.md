@@ -27,6 +27,8 @@ Note: this way of working replaces the classic ACS way (adding app permission re
 
 # DefaultAzureCredential
 
+## What is it?
+
 [DefaultAzureCredential](https://docs.microsoft.com/en-us/dotnet/api/azure.identity.defaultazurecredential?view=azure-dotnet) will check in the following [order of precedence](https://www.rahulpnath.com/blog/defaultazurecredential_from_azure_sdk/) for getting an access token and use the first valid one:
 1. EnvironmentCredential
 2. ManagedIdentityCredential
@@ -35,6 +37,100 @@ Note: this way of working replaces the classic ACS way (adding app permission re
 5. VisualStudioCodeCredential
 6. AzureCliCredential
 7. InteractiveBrowserCredential
+
+## Code highlights
+
+### Startup.cs
+        public void ConfigureServices(IServiceCollection services)
+        {
+            services.AddControllers();
+
+            // Services
+            services.AddMemoryCache(); // caching the access token
+            services.AddScoped<ISharePointService, SharePointService>();
+            services.AddScoped<IAccessTokenProvider, DefaultAzureCredentialAccessTokenProvider>(); // can be interchanged with UserCredentialAccessTokenProvider, which requires app settings: UserUpn, UserPassword
+        }
+
+      public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        {
+            if (env.IsDevelopment())
+            {
+                app.UseDeveloperExceptionPage();
+
+                // Required for EnvironmentCredential (local dev)
+                var clientId = Configuration.GetValue<string>(Globals.AppSettings.ClientId);
+                var tenantId = Configuration.GetValue<string>(Globals.AppSettings.TenantId);
+                var devCertPath = Configuration.GetValue<string>(Globals.AppSettings.DevCertificatePath);
+
+                Environment.SetEnvironmentVariable(Globals.AuthSettings.AZURE_CLIENT_ID, clientId);
+                Environment.SetEnvironmentVariable(Globals.AuthSettings.AZURE_TENANT_ID, tenantId);
+                Environment.SetEnvironmentVariable(Globals.AuthSettings.AZURE_CLIENT_CERTIFICATE_PATH, devCertPath);
+            }
+
+            // ...
+        }
+
+### SharePointService.cs
+        private ClientContext GetContext(string scUrl)
+        {
+            var ctx = new ClientContext(new Uri(scUrl));
+
+            ctx.ExecutingWebRequest += (sender, e) =>
+            {
+                var accessToken = _accessTokenProvider.EnsureAsync().GetAwaiter().GetResult().Token;
+                e.WebRequestExecutor.RequestHeaders["Authorization"] = "Bearer " + accessToken;
+            };
+
+            return ctx;
+        }
+
+### DefaultAzureCredentialAccessTokenProvider
+
+    public class DefaultAzureCredentialAccessTokenProvider : IAccessTokenProvider
+    {
+        private const string CachePrefix = nameof(DefaultAzureCredentialAccessTokenProvider);
+
+        private IConfiguration _config;
+        private readonly IMemoryCache _memoryCache;
+
+        public DefaultAzureCredentialAccessTokenProvider(IMemoryCache memoryCache, IConfiguration config)
+        {
+            _config = config;
+            _memoryCache = memoryCache;
+        }
+
+        public async Task<AccessToken> EnsureAsync()
+        {
+            var tenantName = _config.GetValue<string>(Globals.AppSettings.TenantName);
+            var resource = $"https://{tenantName}.sharepoint.com/.default";
+
+            var cacheKey = $"{CachePrefix}_{resource}";
+            
+            if (
+                !_memoryCache.TryGetValue<AccessToken>(cacheKey, out var token) ||
+                token.ExpiresOn < DateTimeOffset.Now.AddSeconds(-5)
+            )
+            {
+                var at = await AcquireTokenAsync(resource);
+                token = new AccessToken(at.Token, at.ExpiresOn);
+
+                _memoryCache.Set(cacheKey, token.Token, token.ExpiresOn.AddSeconds(-5));
+            }
+
+            return token;
+        }
+
+        private async Task<Azure.Core.AccessToken> AcquireTokenAsync(string resource)
+        {
+            var accessToken = await new DefaultAzureCredential(new DefaultAzureCredentialOptions
+                {
+                    ExcludeInteractiveBrowserCredential = true
+                })
+                .GetTokenAsync(new TokenRequestContext(new[] { resource })); // magic happens here
+
+            return accessToken;
+        }
+    }
 
 ## Use own certificate for local development
 - Install [openssl](https://slproweb.com/products/Win32OpenSSL.html)
