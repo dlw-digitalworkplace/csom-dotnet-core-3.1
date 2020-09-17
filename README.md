@@ -38,6 +38,7 @@ Note: this way of working replaces the classic ACS way (adding app permission re
 
 ## Use own certificate for local development
 - Install [openssl](https://slproweb.com/products/Win32OpenSSL.html)
+  - Once installed, you might want to add the path the openssl.exe to your environment variables
 - cd C:\temp (choose folder of your liking)
 - Execute the following 3 commands ([thanks PnP](https://pnp.github.io/cli-microsoft365/user-guide/connecting-office-365/#log-in-using-a-certificate)) to create a <privateKeyWithPassphrase>.pem file
   - You can rename the output files to match the name of your customer-project-env
@@ -45,7 +46,7 @@ Note: this way of working replaces the classic ACS way (adding app permission re
      - You need to add some info, but not really important (e.g. country, State or province, locality, org name, ...); small input suffices
   - openssl pkcs12 -export -out protected.pfx -inkey privateKey.key -in certificate.cer -password pass:"<yourSecurePassword>"
   - openssl pkcs12 -in protected.pfx -out privateKeyWithPassphrase.pem -nodes
-- Upload the .pem file to your AAD app
+- Upload the .pem file to your AAD app (-> Certificates & Secrets blade)
 - Reference the path to the .pem file in the appsettings of the web api (secrets.json)
 - The code using AzureDefaultCredential will use the EnvironmentCredential (see Startup.cs: env.isDevelopment() and the [required ENV VARS](https://docs.microsoft.com/en-us/dotnet/api/overview/azure/identity-readme?view=azure-dotnet#service-principal-with-certificate) we need to set for it to work)
 
