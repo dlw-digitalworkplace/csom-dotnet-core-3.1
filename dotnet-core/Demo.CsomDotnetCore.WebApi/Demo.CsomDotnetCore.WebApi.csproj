@@ -14,6 +14,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Demo.CsomDotnetCore.Core\Demo.CsomDotnetCore.Core.csproj" />
+    <ProjectReference Include="..\Demo.CsomDotnetCore.Services\Demo.CsomDotnetCore.Services.csproj" />
   </ItemGroup>
 
 

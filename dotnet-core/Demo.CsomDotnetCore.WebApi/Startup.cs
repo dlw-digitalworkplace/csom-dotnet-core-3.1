@@ -3,6 +3,11 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using System;
+using Demo.CsomDotnetCore.Core;
+using Demo.CsomDotnetCore.Core.Authentication;
+using Demo.CsomDotnetCore.Services;
+using Demo.CsomDotnetCore.Services.Contracts;
 
 namespace Demo.CsomDotnetCore.WebApi
 {
@@ -19,6 +24,11 @@ namespace Demo.CsomDotnetCore.WebApi
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
+
+            // Services
+            services.AddMemoryCache();
+            services.AddScoped<ISharePointService, SharePointService>();
+            services.AddScoped<IAccessTokenProvider, DefaultAzureCredentialAccessTokenProvider>(); // can be interchanged with UserCredentialAccessTokenProvider, which requires app settings: UserUpn, UserPassword, TenantUrl, ClientId
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -27,6 +37,14 @@ namespace Demo.CsomDotnetCore.WebApi
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
+
+                var clientId = Configuration.GetValue<string>(Globals.AppSettings.ClientId);
+                var tenantId = Configuration.GetValue<string>(Globals.AppSettings.TenantId);
+                var devCertPath = Configuration.GetValue<string>(Globals.AppSettings.DevCertificatePath);
+
+                Environment.SetEnvironmentVariable(Globals.AuthSettings.AZURE_CLIENT_ID, clientId);
+                Environment.SetEnvironmentVariable(Globals.AuthSettings.AZURE_TENANT_ID, tenantId);
+                Environment.SetEnvironmentVariable(Globals.AuthSettings.AZURE_CLIENT_CERTIFICATE_PATH, devCertPath);
             }
 
             app.UseHttpsRedirection();
