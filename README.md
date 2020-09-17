@@ -39,7 +39,7 @@ Note: this way of working replaces the classic ACS way (adding app permission re
 ## Use own certificate for local development
 - Install [openssl](https://slproweb.com/products/Win32OpenSSL.html)
 - cd C:\temp (choose folder of your liking)
-- Execute the following 3 commands to create a <privateKeyWithPassphrase>.pem file
+- Execute the following 3 commands ([thanks PnP](https://pnp.github.io/cli-microsoft365/user-guide/connecting-office-365/#log-in-using-a-certificate)) to create a <privateKeyWithPassphrase>.pem file
   - You can rename the output files to match the name of your customer-project-env
   - openssl req -x509 -sha256 -nodes -days 365 -newkey rsa:2048 -keyout privateKey.key -out certificate.cer
      - You need to add some info, but not really important (e.g. country, State or province, locality, org name, ...); small input suffices
@@ -47,7 +47,7 @@ Note: this way of working replaces the classic ACS way (adding app permission re
   - openssl pkcs12 -in protected.pfx -out privateKeyWithPassphrase.pem -nodes
 - Upload the .pem file to your AAD app
 - Reference the path to the .pem file in the appsettings of the web api (secrets.json)
-- The code using AzureDefaultCredential will use the EnvironmentCredential (see Startup.cs: env.isDevelopment())
+- The code using AzureDefaultCredential will use the EnvironmentCredential (see Startup.cs: env.isDevelopment() and the [required ENV VARS](https://docs.microsoft.com/en-us/dotnet/api/overview/azure/identity-readme?view=azure-dotnet#service-principal-with-certificate) we need to set for it to work)
 
       Important note: if you misconfigure the above EnvironmentCredential on your local dev whilst being logged in with your global admin account in VS, you will also receive a valid access token and CSOM calls will succeed. However, be aware that this is NOT what we want, we want to mimic an app making CSOM calls to have the same experience on dev vs deployed to avoid nasty bugs. You can log out of that account in account settings to make sure the EnvironmentCredential works as expected.
 
